@@ -106,8 +106,8 @@ M.close_buffer = function(opts)
     -- If the buffer exists in other tabs, hide it in the current tab
     if buffer_exists_in_other_tabs then
         if #buffers_in_current_tab > 1 then
-            vim.api.nvim_buf_set_option(current_buf, "buflisted", false)
             vim.cmd([[bprev]])
+            vim.api.nvim_buf_set_option(current_buf, "buflisted", false)
         else
             vim.cmd("tabclose")
         end
