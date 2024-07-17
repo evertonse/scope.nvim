@@ -95,26 +95,30 @@ end
 -- If is not only the only buffer but also the last tab, we ask for permision to close it all
 ---@param opts table, if buf is not passed we are considering the current buffer
 ---@param opts.buf integer, if buf is not passed we are considering the current buffer
----@param opts.force boolean, default to true to force close
 ---@param opts.ask boolean, default to true to ask before closing the last tab ---@diagnostic disable-line
+---@param opts.delete_function function, default: ``function() vim.api.nvim_buf_delete(opts.buf, { force = true }) end``
 ---@return nil
 M.close_buffer = function(opts)
     opts = vim.tbl_deep_extend("force", {
         buf = vim.api.nvim_get_current_buf(),
-        force = true,
         ask = true,
+        delete_function = function()
+            vim.api.nvim_buf_delete(opts.buf, { force = true })
+        end,
     }, opts or {})
 
     local underlying_buffer_delete = function()
         if not vim.api.nvim_buf_is_valid(opts.buf) then
             return
         end
-        local ok, _ = pcall(vim.api.nvim_buf_delete, opts.buf, { force = opts.force })
+        local ok, _ = pcall(function()
+            opts.delete_function()
+        end)
         if not ok then
             local path = vim.api.nvim_buf_get_name(opts.buf)
             local choice = vim.fn.confirm("Unsaved changed on " .. path .. "Do you want to force it?", "&Yes\n&No")
             if choice == 1 then
-                vim.api.nvim_buf_delete(opts.buf, { force = true })
+                opts.delete_cmd()
             end
         end
     end
